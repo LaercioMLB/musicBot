@@ -3,6 +3,8 @@ from discord.ext import commands
 from decouple import config
 import youtube_dl
 from discord import FFmpegPCMAudio
+from youtubesearchpython import VideosSearch
+
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -46,12 +48,17 @@ ffmpeg_options = {
 }
 
 @bot.command()
-async def play(ctx, *, yt_url):
+async def play(ctx, *, query):
     try:
         if ctx.voice_client:
             voice = ctx.voice_client
             if ctx.guild.id in players:
                 players[ctx.guild.id].stop()
+
+            videosSearch = VideosSearch(query, limit = 1)
+            results = videosSearch.result()
+            video_url = results['result'][0]['link']
+
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -62,15 +69,19 @@ async def play(ctx, *, yt_url):
                 'default_search': 'ytsearch',  # Define a pesquisa padrão para YouTube
                 'outtmpl': 'downloads/%(title)s.%(ext)s',
             }
+
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(yt_url, download=False)
+                info = ydl.extract_info(video_url, download=False)
                 url2 = info['formats'][0]['url']
                 source = FFmpegPCMAudio(url2, **ffmpeg_options)
             voice.play(source)
-            # Resto do código permanece o mesmo
         else:
             channel = ctx.author.voice.channel
             voice_channel = await channel.connect()
+            videosSearch = VideosSearch(query, limit = 1)
+            results = videosSearch.result()
+            video_url = results['result'][0]['link']
+
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -81,15 +92,15 @@ async def play(ctx, *, yt_url):
                 'default_search': 'ytsearch',  # Define a pesquisa padrão para YouTube
                 'outtmpl': 'downloads/%(title)s.%(ext)s',
             }
+
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(yt_url, download=False)
+                info = ydl.extract_info(video_url, download=False)
                 url2 = info['formats'][0]['url']
                 source = FFmpegPCMAudio(url2, **ffmpeg_options)
             players[ctx.guild.id] = voice_channel
             voice_channel.play(source)
     except Exception as e:
-        await ctx.send(f"Error3: `{e}`")
-
+        await ctx.send(f"Error: `{e}`")
 @bot.command()
 async def pause(ctx):
     try:
