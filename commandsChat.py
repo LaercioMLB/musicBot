@@ -10,6 +10,19 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 async def on_ready():
     print(f'Estou conectado como {bot.user.name} - {bot.user.id}')
 
+
+# BOT ENTRA E SAI DO CHAT
+@bot.command()
+async def entrar(ctx):
+    channel = ctx.author.voice.channel
+    await channel.connect()
+
+@bot.command()
+async def sair(ctx):
+    await ctx.voice_client.disconnect()
+
+#---------------------------------------------------------#
+
 @bot.command()
 async def oifilho(ctx):
     await ctx.send("Oi pai!")
