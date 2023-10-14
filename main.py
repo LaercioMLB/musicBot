@@ -5,11 +5,11 @@ import youtube_dl
 from discord import FFmpegPCMAudio
 from youtubesearchpython import VideosSearch
 
-
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 players = {}
+queue = []  # Lista para armazenar as músicas na fila
 COR = 0xF7FE2E
 
 @bot.event
@@ -51,11 +51,7 @@ ffmpeg_options = {
 async def play(ctx, *, query):
     try:
         if ctx.voice_client:
-            voice = ctx.voice_client
-            if ctx.guild.id in players:
-                players[ctx.guild.id].stop()
-
-            videosSearch = VideosSearch(query, limit = 1)
+            videosSearch = VideosSearch(query, limit=1)
             results = videosSearch.result()
             video_url = results['result'][0]['link']
 
@@ -73,12 +69,18 @@ async def play(ctx, *, query):
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_url, download=False)
                 url2 = info['formats'][0]['url']
-                source = FFmpegPCMAudio(url2, **ffmpeg_options)
-            voice.play(source)
+
+            # Adicione a música à fila
+            queue.append({'url': url2, 'query': query})
+
+            if not ctx.voice_client.is_playing() and not ctx.voice_client.is_paused():
+                await play_next(ctx)
+            else:
+                await ctx.send(f"Música adicionada à fila: {query}")
         else:
             channel = ctx.author.voice.channel
             voice_channel = await channel.connect()
-            videosSearch = VideosSearch(query, limit = 1)
+            videosSearch = VideosSearch(query, limit=1)
             results = videosSearch.result()
             video_url = results['result'][0]['link']
 
@@ -96,11 +98,19 @@ async def play(ctx, *, query):
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(video_url, download=False)
                 url2 = info['formats'][0]['url']
-                source = FFmpegPCMAudio(url2, **ffmpeg_options)
-            players[ctx.guild.id] = voice_channel
-            voice_channel.play(source)
+                voice_channel.play(FFmpegPCMAudio(url2, **ffmpeg_options))
+
+            await ctx.send(f"Tocando agora: {query}")
     except Exception as e:
         await ctx.send(f"Error: `{e}`")
+
+async def play_next(ctx):
+    if len(queue) > 0:
+        video = queue.pop(0)
+        source = FFmpegPCMAudio(video['url'], **ffmpeg_options)
+        ctx.voice_client.play(source, after=lambda e: play_next(ctx))
+        await ctx.send(f"Tocando agora: {video['query']}")
+
 @bot.command()
 async def pause(ctx):
     try:
@@ -126,6 +136,15 @@ async def resume(ctx):
         players[ctx.guild.id].resume()
     except Exception as error:
         await ctx.send(f"Error5: `{error}`")
+
+@bot.command()
+async def skip(ctx):
+    try:
+        if ctx.voice_client:
+            ctx.voice_client.stop()
+            await play_next(ctx)  # Toca a próxima música na fila
+    except Exception as error:
+        await ctx.send(f"Error6: `{error}`")
 
 token = config('TOKEN_SERVER')
 
