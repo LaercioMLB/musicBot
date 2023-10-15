@@ -109,12 +109,7 @@ async def play(ctx, *, query):
     except Exception as e:
         await ctx.send(f"Error: `{e}`")
 
-async def play_next(ctx):
-    if len(queue) > 0:
-        video = queue.pop(0)
-        source = FFmpegPCMAudio(video['url'], **ffmpeg_options)
-        ctx.voice_client.play(source, after=lambda e: play_next(ctx))
-        await ctx.send(f"Tocando agora: {video['query']}")
+
 
 @bot.command()
 async def pause(ctx):
@@ -151,6 +146,16 @@ async def skip(ctx):
     except Exception as error:
         await ctx.send(f"Error6: `{error}`")
 
+async def play_next(ctx):
+    if len(queue) > 0:
+        video = queue.pop(0)
+        source = FFmpegPCMAudio(video['url'], **ffmpeg_options)
+        await ctx.send(f"Preparando para tocar: {video['query']}")
+        ctx.voice_client.play(source, after=lambda e: play_next(ctx))
+        await ctx.send(f"Tocando agora: {video['query']}")
+    else:
+        await ctx.send("A fila de reprodução está vazia.")
+        
 token = config('TOKEN_SERVER')
 
 if token is not None:

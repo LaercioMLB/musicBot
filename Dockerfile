@@ -1,17 +1,18 @@
-# Use a imagem Alpine Linux como base
-FROM python:3.9-alpine
+# Use a imagem Python como base
+FROM python:3.8
 
-# Instale as dependências do FFmpeg
-RUN apk --no-cache add ffmpeg
+# Atualize os pacotes do sistema e instale as dependências do sistema
+RUN apt-get update && apt-get install -y \
+    libgirepository1.0-dev \
+    pkg-config \
+    libcairo2-dev \
+    libsystemd-dev \
+    libdbus-1-dev\
+    ffmpeg
 
-# Configure o ambiente para evitar problemas de codificação
-ENV PYTHONUNBUFFERED 1
-
-# Crie e defina o diretório de trabalho
+# Crie um diretório de trabalho e copie seu código e requirements.txt
 WORKDIR /app
-
-# Copie o código da sua aplicação para o contêiner
-COPY . .
+COPY . /app
 
 # Instale as dependências Python listadas no arquivo requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
