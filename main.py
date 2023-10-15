@@ -4,6 +4,11 @@ from decouple import config
 import youtube_dl
 from discord import FFmpegPCMAudio
 from youtubesearchpython import VideosSearch
+import os
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    print(f"Aplicação Python está rodando na porta {port}")
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
