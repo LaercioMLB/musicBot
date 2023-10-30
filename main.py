@@ -22,8 +22,8 @@ async def on_ready():
     print(bot.user.name)
     print("===================")
 
-@bot.command()
-async def entrar(ctx):
+@bot.command(aliases=['entrar'])
+async def join(ctx):
     try:
         channel = ctx.author.voice.channel
         await channel.connect()
@@ -32,8 +32,8 @@ async def entrar(ctx):
     except Exception as error:
         await ctx.send(f"Ein Error1: `{error}`")
 
-@bot.command()
-async def sair(ctx):
+@bot.command(aliases=['sair'])
+async def goout(ctx):
     try:
         mscleave = discord.Embed(
             title="\n",
@@ -52,7 +52,7 @@ ffmpeg_options = {
     'options': '-vn'
 }
 
-@bot.command()
+@bot.command(aliases=['tocar'])
 async def play(ctx, *, query):
     try:
         if ctx.voice_client:
@@ -111,7 +111,7 @@ async def play(ctx, *, query):
 
 
 
-@bot.command()
+@bot.command(aliases=['pausar'])
 async def pause(ctx):
     try:
         mscpause = discord.Embed(
@@ -124,7 +124,7 @@ async def pause(ctx):
     except Exception as error:
         await ctx.send(f"Error4: `{error}`")
 
-@bot.command()
+@bot.command(aliases=['continuar'])
 async def resume(ctx):
     try:
         mscresume = discord.Embed(
@@ -137,7 +137,7 @@ async def resume(ctx):
     except Exception as error:
         await ctx.send(f"Error5: `{error}`")
 
-@bot.command()
+@bot.command(aliases=['pular'])
 async def skip(ctx):
     try:
         if ctx.voice_client:
